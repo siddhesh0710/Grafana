@@ -1,18 +1,28 @@
-wget -q -O gpg.key https://rpm.grafana.com/gpg.key
-sudo rpm --import gpg.key
-sudo cat <<EOF | tee /etc/yum.repos.d/grafana.repo
-[grafana]
-name=grafana
-baseurl=https://rpm.grafana.com
-repo_gpgcheck=1
-enabled=1
-gpgcheck=1
-gpgkey=https://rpm.grafana.com/gpg.key
-sslverify=1
-sslcacert=/etc/pki/tls/certs/ca-bundle.crt
-EOF
+#!/bin/bash
+set -e
 
-exclude=*beta*
-yum install grafana -y
-systemctl start grafana-server.service
-systemctl status grafana-server.service
+echo "🚀 Installing Grafana on Ubuntu 22.04..."
+
+# 1. Install prerequisites
+sudo apt-get update -y
+sudo apt-get install -y software-properties-common curl
+
+# 2. Add Grafana GPG key
+curl -fsSL https://apt.grafana.com/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/grafana-archive-keyring.gpg
+
+# 3. Add Grafana APT repository
+echo "deb [signed-by=/usr/share/keyrings/grafana-archive-keyring.gpg] https://packages.grafana.com/oss/deb stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+
+# 4. Update package lists
+sudo apt-get update -y
+
+# 5. Install Grafana
+sudo apt-get install -y grafana
+
+# 6. Start and enable Grafana service
+sudo systemctl enable grafana-server
+sudo systemctl start grafana-server
+sudo systemctl status grafana-server
+
+echo "✅ Grafana installation complete!"
+echo "Access Grafana at: http://<server-ip>:3000 (default admin:admin)"
